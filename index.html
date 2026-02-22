@@ -15,7 +15,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 input,select,textarea{font-size:16px!important;font-family:'Noto Sans JP',sans-serif}
-input[type="number"]{font-size:24px!important}
 :root{
 --orange:#F5A623;--orange-light:#FFF3E0;--orange-dark:#E8950F;
 --green:#4CAF50;--green-light:#E8F5E9;
@@ -33,45 +32,48 @@ html,body{height:100%;font-family:'Noto Sans JP',sans-serif;background:var(--bg)
 .tab.on{color:var(--orange)}
 .tab svg{width:22px;height:22px}
 /* Header */
-.hdr{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative}
+.hdr{background:var(--card);padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative}
 .hdr h1{font-size:16px;font-weight:600}
 .hdr-r{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:6px}
 .hdr-r button{background:none;border:none;color:var(--orange);cursor:pointer;padding:4px}
 /* Toggle */
-.tog{display:flex;margin:12px 16px;background:#F0EEEB;border-radius:25px;padding:3px}
-.tog button{flex:1;padding:8px 0;border-radius:22px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;background:transparent;color:var(--text-sub)}
+.tog{display:flex;margin:8px 16px;background:#F0EEEB;border-radius:25px;padding:3px}
+.tog button{flex:1;padding:8px 0;border-radius:22px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;background:transparent;color:var(--text-sub);position:relative;z-index:1;-webkit-appearance:none;touch-action:manipulation}
 .tog .on-e{background:var(--orange);color:#fff}
 .tog .on-i{background:var(--green);color:#fff}
 /* Date selector */
-.dsel{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 16px}
-.dsel span{font-size:15px;font-weight:500;min-width:180px;text-align:center}
-.dbtn{background:none;border:none;cursor:pointer;color:var(--text-sub);padding:8px;border-radius:50%}
+.dsel{display:flex;align-items:center;gap:8px;padding:4px 16px}
+.dsel-input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px!important;font-family:inherit;background:var(--card);color:var(--text);outline:none;text-align:center;-webkit-appearance:none;appearance:none}
+.dsel-input:focus{border-color:var(--orange)}
+.dbtn{background:none;border:none;cursor:pointer;color:var(--text-sub);padding:8px;border-radius:50%;flex-shrink:0}
 .dbtn:active{background:var(--border)}
 /* Amount */
-.amt-wrap{display:flex;align-items:center;gap:8px;padding:0 16px;margin:8px 0 12px}
-.amt-wrap label{font-size:14px;font-weight:600;white-space:nowrap}
-.amt-in{flex:1;padding:10px 12px;border:none;border-bottom:2px solid var(--border);font-size:24px!important;font-weight:600;font-family:inherit;background:var(--orange-light);border-radius:6px 6px 0 0;outline:none;text-align:right}
-.amt-in:focus{border-bottom-color:var(--orange)}
+.amt-wrap{padding:0 16px;margin:4px 0 8px}
+.amt-wrap label{font-size:12px;color:var(--text-sub);margin-bottom:4px;display:block;font-weight:500}
+.amt-row{display:flex;align-items:center;gap:8px}
+.amt-in{flex:1;padding:10px 12px;border:1.5px solid var(--orange);border-radius:8px;font-size:16px!important;font-weight:600;font-family:inherit;background:var(--orange-light);color:var(--text);outline:none;text-align:right}
+.amt-in:focus{border-color:var(--orange-dark);box-shadow:0 0 0 3px rgba(245,166,35,.15)}
+.amt-in::placeholder{color:#ccc;font-weight:400}
 .amt-u{font-size:16px;font-weight:600;color:var(--text-sub)}
 /* Category grid */
-.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 16px}
-.cat-it{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:var(--text)}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 16px}
+.cat-it{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:var(--text)}
 .cat-it.sel{border-color:var(--orange);background:var(--orange-light)}
 .cat-it.sel-i{border-color:var(--green);background:var(--green-light)}
 .cat-it.dash{border-style:dashed;color:var(--text-sub)}
 /* Form */
-.fg{padding:0 16px;margin-bottom:12px}
+.fg{padding:0 16px;margin-bottom:8px}
 .fl{font-size:12px;color:var(--text-sub);margin-bottom:4px;display:block;font-weight:500}
 .fi{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px!important;font-family:inherit;background:var(--card);color:var(--text);outline:none;transition:border-color .2s}
 .fi:focus{border-color:var(--orange)}
 .fsel{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px!important;font-family:inherit;background:var(--card);color:var(--text);outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 /* Submit */
-.sbtn{margin:16px;padding:14px;border-radius:25px;border:none;font-size:16px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;transition:opacity .2s;width:calc(100% - 32px)}
+.sbtn{margin:8px 16px 16px;padding:14px;border-radius:25px;border:none;font-size:16px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;transition:opacity .2s;width:calc(100% - 32px)}
 .sbtn:active{opacity:.8}
 .sbtn-e{background:linear-gradient(135deg,var(--orange),var(--orange-dark))}
 .sbtn-i{background:linear-gradient(135deg,var(--green),#388E3C)}
 /* Section title */
-.stit{font-size:13px;font-weight:600;color:var(--text-sub);padding:12px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+.stit{font-size:13px;font-weight:600;color:var(--text-sub);padding:8px 16px 4px;display:flex;justify-content:space-between;align-items:center}
 .stit button{background:none;border:none;color:var(--orange);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 /* Tx list */
 .txl{padding:0 16px}
@@ -89,7 +91,7 @@ html,body{height:100%;font-family:'Noto Sans JP',sans-serif;background:var(--bg)
 .scard .vl{font-size:18px;font-weight:700}
 .vl.inc{color:var(--green)}.vl.exp{color:var(--red)}.vl.bal{color:var(--orange)}
 /* FAB */
-.fab{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);right:calc(50% - 220px);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;border:none;box-shadow:0 4px 16px rgba(245,166,35,.4);cursor:pointer;z-index:90;transition:transform .2s}
+.fab{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);right:max(16px, calc(50% - 224px));width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;border:none;box-shadow:0 4px 16px rgba(245,166,35,.4);cursor:pointer;z-index:90;transition:transform .2s}
 .fab:active{transform:scale(.92)}
 /* Calendar */
 .cw{padding:8px 12px}
@@ -298,9 +300,9 @@ function renderInput(){
   const catType = s.mode==='expense' ? 'expense' : 'income';
   
   let catGrid = cats.map(c =>
-    `<div class="cat-it ${s.category===c?(s.mode==='expense'?'sel':'sel-i'):''}" onclick="inputCat('${c}')">${catIcon(c,catType)}<span>${c}</span></div>`
+    `<div class="cat-it ${s.category===c?(s.mode==='expense'?'sel':'sel-i'):''}" data-act="inputCat" data-val="${c}">${catIcon(c,catType)}<span>${c}</span></div>`
   ).join('');
-  catGrid += `<div class="cat-it dash" onclick="openCatEditor('${catType}')">${IC.editS}<span>編集・追加</span></div>`;
+  catGrid += `<div class="cat-it dash" data-act="openCatEditor" data-val="${catType}">${IC.editS}<span>編集・追加</span></div>`;
 
   let memberSel = '';
   if(s.mode==='income' && (s.category==='団費'||s.category==='臨時徴収')){
@@ -315,25 +317,30 @@ function renderInput(){
   return `
     <div class="hdr"><h1>${yr?.name||'年度未設定'}</h1></div>
     <div class="tog">
-      <button class="${s.mode==='expense'?'on-e':''}" onclick="inputMode('expense')">支出</button>
-      <button class="${s.mode==='income'?'on-i':''}" onclick="inputMode('income')">収入</button>
+      <button class="${s.mode==='expense'?'on-e':''}" data-act="inputMode" data-val="expense">支出</button>
+      <button class="${s.mode==='income'?'on-i':''}" data-act="inputMode" data-val="income">収入</button>
     </div>
-    <div class="dsel">
-      <button class="dbtn" onclick="inputDateShift(-1)">${IC.chevL}</button>
-      <span>${fmtFull(s.date)}</span>
-      <button class="dbtn" onclick="inputDateShift(1)">${IC.chevR}</button>
+    <div class="fg">
+      <label class="fl">日付</label>
+      <div class="dsel">
+        <button class="dbtn" data-act="inputDateShift" data-val="-1">${IC.chevL}</button>
+        <input type="date" class="dsel-input" value="${s.date}" onchange="inputState.date=this.value;render()">
+        <button class="dbtn" data-act="inputDateShift" data-val="1">${IC.chevR}</button>
+      </div>
     </div>
     <div class="amt-wrap">
-      <label>${s.mode==='expense'?'支出':'収入'}</label>
-      <input class="amt-in" type="number" inputmode="numeric" placeholder="0" value="${s.amount}" oninput="inputState.amount=this.value" id="amtInput">
-      <span class="amt-u">円</span>
+      <label>${s.mode==='expense'?'支出金額':'収入金額'}</label>
+      <div class="amt-row">
+        <input class="amt-in" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="${s.amount}" oninput="inputState.amount=this.value.replace(/[^0-9]/g,'')" id="amtInput">
+        <span class="amt-u">円</span>
+      </div>
     </div>
     <div class="stit"><span>カテゴリー</span></div>
     <div class="cat-grid">${catGrid}</div>
     ${memberSel}
     ${payeeField}
     <div class="fg"><label class="fl">メモ</label><input class="fi" placeholder="任意" value="${s.memo}" oninput="inputState.memo=this.value"></div>
-    <button class="sbtn ${s.mode==='expense'?'sbtn-e':'sbtn-i'}" onclick="submitInput()">${s.mode==='expense'?'支出を入力する':'収入を入力する'}</button>
+    <button class="sbtn ${s.mode==='expense'?'sbtn-e':'sbtn-i'}" data-act="submitInput">${s.mode==='expense'?'支出を入力する':'収入を入力する'}</button>
   `;
 }
 
@@ -501,9 +508,11 @@ function renderAddModal(){
       </div>
       <div class="fg"><label class="fl">日付</label><input class="fi" type="date" value="${s.date}" onchange="addState.date=this.value"></div>
       <div class="amt-wrap">
-        <label>${s.mode==='expense'?'支出':'収入'}</label>
-        <input class="amt-in" type="number" inputmode="numeric" placeholder="0" value="${s.amount}" oninput="addState.amount=this.value">
-        <span class="amt-u">円</span>
+        <label>${s.mode==='expense'?'支出金額':'収入金額'}</label>
+        <div class="amt-row">
+          <input class="amt-in" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="${s.amount}" oninput="addState.amount=this.value.replace(/[^0-9]/g,'')">
+          <span class="amt-u">円</span>
+        </div>
       </div>
       <div class="stit"><span>カテゴリー</span>${s.editingCats?`<button onclick="addState.editingCats=false;renderAddModal()">完了</button>`:''}</div>
       ${catSection}
@@ -889,7 +898,28 @@ function showConfirm(title, msg, onOk){
 window.closeConfirm = () => {const l=document.getElementById('confLayer');if(l)l.innerHTML='';};
 
 // ─── Bind events & init ───
-function bindEvents(){}
+function bindEvents(){
+  // Event delegation for data-act attributes (reliable on iOS)
+  const main = document.getElementById('main');
+  if(main && !main._bound){
+    main._bound = true;
+    main.addEventListener('click', function(e){
+      const el = e.target.closest('[data-act]');
+      if(!el) return;
+      const act = el.dataset.act;
+      const val = el.dataset.val;
+      e.preventDefault();
+      e.stopPropagation();
+      switch(act){
+        case 'inputMode': inputState.mode=val; inputState.category=''; render(); break;
+        case 'inputDateShift': {const d=new Date(inputState.date); d.setDate(d.getDate()+Number(val)); inputState.date=toDS(d); render();} break;
+        case 'inputCat': inputState.category=val; render(); break;
+        case 'openCatEditor': openCatEditor(val); break;
+        case 'submitInput': submitInput(); break;
+      }
+    });
+  }
+}
 
 // Register minimal SW for PWA
 if('serviceWorker' in navigator){
