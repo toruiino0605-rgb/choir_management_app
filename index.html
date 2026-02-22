@@ -324,7 +324,7 @@ function renderInput(){
       <label class="fl">日付</label>
       <div class="dsel">
         <button class="dbtn" data-act="inputDateShift" data-val="-1">${IC.chevL}</button>
-        <input type="date" class="dsel-input" value="${s.date}" onchange="inputState.date=this.value;render()">
+        <input type="date" class="dsel-input" value="${s.date}" onchange="if(this.value){inputState.date=this.value}else{inputState.date='${todayStr()}';this.value='${todayStr()}'};render()">
         <button class="dbtn" data-act="inputDateShift" data-val="1">${IC.chevR}</button>
       </div>
     </div>
@@ -374,16 +374,18 @@ function renderCalendar(){
   const firstDay = new Date(yr,mo,1).getDay();
   const dim = new Date(yr,mo+1,0).getDate();
   const prevDim = new Date(yr,mo,0).getDate();
-  const inc = yearIncomes(), exp = yearExpenses();
+  const allInc = D.incomes, allExp = D.expenses;
   
-  // Monthly totals
-  const mInc = inc.filter(i=>{const d=new Date(i.date);return d.getMonth()===mo&&d.getFullYear()===yr}).reduce((s,i)=>s+i.amount,0);
-  const mExp = exp.filter(e=>{const d=new Date(e.date);return d.getMonth()===mo&&d.getFullYear()===yr}).reduce((s,e)=>s+e.amount,0);
+  // This month's transactions (across all years)
+  const moInc = allInc.filter(i=>{const d=new Date(i.date);return d.getMonth()===mo&&d.getFullYear()===yr});
+  const moExp = allExp.filter(e=>{const d=new Date(e.date);return d.getMonth()===mo&&d.getFullYear()===yr});
+  const mIncT = moInc.reduce((s,i)=>s+i.amount,0);
+  const mExpT = moExp.reduce((s,e)=>s+e.amount,0);
   
   // Day amounts map
   const dayMap = {};
-  inc.forEach(i=>{if(!dayMap[i.date])dayMap[i.date]={i:0,e:0};dayMap[i.date].i+=i.amount;});
-  exp.forEach(e=>{if(!dayMap[e.date])dayMap[e.date]={i:0,e:0};dayMap[e.date].e+=e.amount;});
+  moInc.forEach(i=>{if(!dayMap[i.date])dayMap[i.date]={i:0,e:0};dayMap[i.date].i+=i.amount;});
+  moExp.forEach(e=>{if(!dayMap[e.date])dayMap[e.date]={i:0,e:0};dayMap[e.date].e+=e.amount;});
   
   let days = [];
   for(let i=firstDay-1;i>=0;i--) days.push({d:prevDim-i,cur:false});
@@ -405,26 +407,37 @@ function renderCalendar(){
     return `<div class="${cls}" onclick="calDayClick('${ds}')">${dd.d}${dots}</div>`;
   }).join('');
   
-  // Selected day transactions
-  const sd = calState.selectedDate;
-  const dayTx = [...inc.filter(i=>i.date===sd).map(i=>({...i,_t:'income'})),...exp.filter(e=>e.date===sd).map(e=>({...e,_t:'expense'}))];
+  // Monthly transaction list (sorted by date)
+  const moTx = [
+    ...moInc.map(i=>({...i,_t:'income'})),
+    ...moExp.map(e=>({...e,_t:'expense'}))
+  ].sort((a,b)=>b.date.localeCompare(a.date));
+  
   let txHTML = '';
-  if(dayTx.length===0) txHTML='<div class="empty"><p>この日の記録はありません</p></div>';
-  else txHTML = dayTx.map(tx=>{
-    const ic = catIcon(tx.category, tx._t);
-    return `<div class="txi">
-      <div class="tx-icon">${ic}</div>
-      <div class="tx-info"><div class="tx-cat">${tx.category}</div><div class="tx-memo">${tx.memo||tx.payee||'—'}</div></div>
-      <div class="tx-amt ${tx._t==='income'?'inc':'exp'}">${tx._t==='income'?'+':'−'}¥${fmt(tx.amount)}</div>
-      <button style="background:none;border:none;padding:4px;cursor:pointer;color:#ccc" onclick="deleteTx('${tx.id}','${tx._t}')">${IC.trash}</button>
-    </div>`;
-  }).join('');
+  if(moTx.length===0){
+    txHTML='<div class="empty"><p>この月の記録はありません</p></div>';
+  } else {
+    let lastDate='';
+    moTx.forEach(tx=>{
+      if(tx.date!==lastDate){
+        lastDate=tx.date;
+        txHTML+=`<div style="font-size:12px;font-weight:600;color:var(--text-sub);padding:10px 0 4px;border-bottom:1px solid var(--border)">${fmtFull(tx.date)}</div>`;
+      }
+      const ic = catIcon(tx.category, tx._t);
+      txHTML+=`<div class="txi">
+        <div class="tx-icon">${ic}</div>
+        <div class="tx-info"><div class="tx-cat">${tx.category}</div><div class="tx-memo">${tx.memo||tx.payee||'—'}</div></div>
+        <div class="tx-amt ${tx._t==='income'?'inc':'exp'}">${tx._t==='income'?'+':'−'}¥${fmt(tx.amount)}</div>
+        <button style="background:none;border:none;padding:4px;cursor:pointer;color:#ccc" onclick="deleteTx('${tx.id}','${tx._t}')">${IC.trash}</button>
+      </div>`;
+    });
+  }
 
   return `
     <div class="hdr"><h1>カレンダー</h1></div>
     <div class="srow">
-      <div class="scard"><div class="lb">収入</div><div class="vl inc">¥${fmt(mInc)}</div></div>
-      <div class="scard"><div class="lb">支出</div><div class="vl exp">¥${fmt(mExp)}</div></div>
+      <div class="scard"><div class="lb">収入</div><div class="vl inc">¥${fmt(mIncT)}</div></div>
+      <div class="scard"><div class="lb">支出</div><div class="vl exp">¥${fmt(mExpT)}</div></div>
     </div>
     <div class="cw">
       <div class="ch">
@@ -436,11 +449,11 @@ function renderCalendar(){
       <div class="cgr">${daysHTML}</div>
     </div>
     <div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:14px;font-weight:600">${fmtFull(sd)}</span>
-      <button class="btn btn-o btn-sm" onclick="openAddModal('${sd}')" style="display:flex;align-items:center;gap:4px">${IC.plus}<span style="font-size:12px">追加</span></button>
+      <span style="font-size:14px;font-weight:600">${yr}年${mo+1}月の明細</span>
+      <button class="btn btn-o btn-sm" onclick="openAddModal('${calState.selectedDate}')" style="display:flex;align-items:center;gap:4px">${IC.plus}<span style="font-size:12px">追加</span></button>
     </div>
     <div class="txl">${txHTML}</div>
-    <button class="fab" onclick="openAddModal('${sd}')">${IC.plus}</button>
+    <button class="fab" onclick="openAddModal('${calState.selectedDate}')">${IC.plus}</button>
   `;
 }
 
@@ -506,7 +519,7 @@ function renderAddModal(){
         <button class="${s.mode==='expense'?'on-e':''}" onclick="addState.mode='expense';addState.category='';addState.editingCats=false;renderAddModal()">支出</button>
         <button class="${s.mode==='income'?'on-i':''}" onclick="addState.mode='income';addState.category='';addState.editingCats=false;renderAddModal()">収入</button>
       </div>
-      <div class="fg"><label class="fl">日付</label><input class="fi" type="date" value="${s.date}" onchange="addState.date=this.value"></div>
+      <div class="fg"><label class="fl">日付</label><input class="fi" type="date" value="${s.date}" onchange="if(this.value){addState.date=this.value}else{addState.date='${todayStr()}';this.value='${todayStr()}'}"></div>
       <div class="amt-wrap">
         <label>${s.mode==='expense'?'支出金額':'収入金額'}</label>
         <div class="amt-row">
@@ -598,18 +611,66 @@ window.openCatEditor = (type) => {
 // CHART TAB
 // ═══════════════════════════════════
 let chartMode = 'monthly';
+let chartYearId = D.settings.currentYearId;
+
+function getIncomesForYear(yid){ return D.incomes.filter(i=>i.yearId===yid).sort((a,b)=>b.date.localeCompare(a.date)); }
+function getExpensesForYear(yid){ return D.expenses.filter(e=>e.yearId===yid).sort((a,b)=>b.date.localeCompare(a.date)); }
+
+// Get all year options: registered years + any yearIds found in data
+function getAllYearOptions(){
+  const yearMap = {};
+  D.years.forEach(y=>{ yearMap[y.id] = y; });
+  // Also collect yearIds from data that might not have a year entry
+  const dataYearIds = new Set();
+  D.incomes.forEach(i=>{ if(i.yearId) dataYearIds.add(i.yearId); });
+  D.expenses.forEach(e=>{ if(e.yearId) dataYearIds.add(e.yearId); });
+  dataYearIds.forEach(yid=>{
+    if(!yearMap[yid]){
+      yearMap[yid] = {id:yid, name:yid+'年度', startDate:yid+'-04-01', endDate:(Number(yid)+1)+'-03-31'};
+    }
+  });
+  return Object.values(yearMap).sort((a,b)=>a.id.localeCompare(b.id));
+}
+
+function svgPie(sorted, total, colors, size){
+  if(sorted.length===0 || total===0) return '<div class="empty"><p>データなし</p></div>';
+  const cx=size/2, cy=size/2, r=size/2-8;
+  let startAngle = -Math.PI/2;
+  let paths = '';
+  sorted.forEach(([c,a],i)=>{
+    const slice = (a/total)*Math.PI*2;
+    const endAngle = startAngle + slice;
+    const x1=cx+r*Math.cos(startAngle), y1=cy+r*Math.sin(startAngle);
+    const x2=cx+r*Math.cos(endAngle), y2=cy+r*Math.sin(endAngle);
+    const large = slice > Math.PI ? 1 : 0;
+    if(sorted.length===1){
+      paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${colors[i%colors.length]}"/>`;
+    } else {
+      paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${colors[i%colors.length]}"/>`;
+    }
+    startAngle = endAngle;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto">${paths}</svg>`;
+}
+
 function renderChart(){
-  const inc=yearIncomes(), exp=yearExpenses();
+  const allYears = getAllYearOptions();
+  const yr = allYears.find(y=>y.id===chartYearId) || allYears[0] || getYear();
+  chartYearId = yr.id;
+  const inc=getIncomesForYear(yr.id), exp=getExpensesForYear(yr.id);
   const tI=inc.reduce((s,i)=>s+i.amount,0), tE=exp.reduce((s,e)=>s+e.amount,0);
-  const yr=getYear();
+  const colors=["#F5A623","#4CAF50","#2196F3","#E91E63","#9C27B0","#FF5722","#00BCD4","#795548","#607D8B","#FF9800"];
+  
+  // Year selector
+  const yearOpts = allYears.map(y=>`<option value="${y.id}"${y.id===chartYearId?' selected':''}>${y.name}</option>`).join('');
   
   let content='';
   if(chartMode==='monthly'){
     const startM=new Date(yr.startDate).getMonth(), startY=new Date(yr.startDate).getFullYear();
     let months=[];
     for(let i=0;i<12;i++){
-      const m=(startM+i)%12, y=startY+Math.floor((startM+i)/12);
-      const key=`${y}-${String(m+1).padStart(2,'0')}`;
+      const m=(startM+i)%12, y2=startY+Math.floor((startM+i)/12);
+      const key=`${y2}-${String(m+1).padStart(2,'0')}`;
       months.push({
         label:`${m+1}月`,
         income:inc.filter(x=>x.date.startsWith(key)).reduce((s,x)=>s+x.amount,0),
@@ -622,7 +683,6 @@ function renderChart(){
     ).join('');
     content = `<div class="card"><div class="card-h">月別 収入・支出</div><div style="padding:12px 0"><div class="cb-wrap">${bars}</div><div class="leg" style="justify-content:center"><div class="leg-it"><div class="leg-dot" style="background:#4CAF50"></div>収入</div><div class="leg-it"><div class="leg-dot" style="background:#EF5350"></div>支出</div></div></div></div>`;
   } else {
-    const colors=["#F5A623","#4CAF50","#2196F3","#E91E63","#9C27B0","#FF5722","#00BCD4","#795548","#607D8B","#FF9800"];
     const expByCat={}, incByCat={};
     exp.forEach(e=>{expByCat[e.category]=(expByCat[e.category]||0)+e.amount});
     inc.forEach(i=>{incByCat[i.category]=(incByCat[i.category]||0)+i.amount});
@@ -631,17 +691,18 @@ function renderChart(){
     
     const renderCatCard = (title, sorted, total) => {
       if(sorted.length===0) return `<div class="card"><div class="card-h">${title}</div><div class="card-b"><div class="empty"><p>データなし</p></div></div></div>`;
+      const pie = svgPie(sorted, total, colors, 160);
       const rows = sorted.map(([c,a],i)=>
-        `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="leg-dot" style="background:${colors[i%colors.length]};flex-shrink:0"></div><span style="flex:1;font-size:13px">${c}</span><span style="font-size:13px;font-weight:600">¥${fmt(a)}</span><span style="font-size:11px;color:var(--text-sub);width:40px;text-align:right">${total?Math.round(a/total*100):0}%</span></div>`
+        `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="leg-dot" style="background:${colors[i%colors.length]};flex-shrink:0"></div><span style="flex:1;font-size:13px">${c}</span><span style="font-size:13px;font-weight:600">¥${fmt(a)}</span><span style="font-size:11px;color:var(--text-sub);width:40px;text-align:right">${total?Math.round(a/total*100):0}%</span></div>`
       ).join('');
-      const bar = sorted.map(([c,a],i)=>`<div style="width:${(a/total)*100}%;background:${colors[i%colors.length]}"></div>`).join('');
-      return `<div class="card"><div class="card-h">${title}</div><div class="card-b">${rows}</div><div style="padding:0 16px 12px"><div style="display:flex;height:20px;border-radius:10px;overflow:hidden">${bar}</div></div></div>`;
+      return `<div class="card"><div class="card-h">${title}</div><div style="padding:16px 0">${pie}</div><div class="card-b">${rows}</div></div>`;
     };
     content = renderCatCard('支出カテゴリー', eSorted, tE) + renderCatCard('収入カテゴリー', iSorted, tI);
   }
 
   return `
     <div class="hdr"><h1>グラフ</h1></div>
+    <div class="fg" style="margin-top:8px"><label class="fl">表示年度</label><select class="fsel" onchange="chartYearId=this.value;render()">${yearOpts}</select></div>
     <div class="srow">
       <div class="scard"><div class="lb">収入合計</div><div class="vl inc">¥${fmt(tI)}</div></div>
       <div class="scard"><div class="lb">支出合計</div><div class="vl exp">¥${fmt(tE)}</div></div>
@@ -658,9 +719,17 @@ function renderChart(){
 // ═══════════════════════════════════
 // REPORT TAB
 // ═══════════════════════════════════
+let reportYearId = D.settings.currentYearId;
+
 function renderReport(){
-  const yr=getYear(), inc=yearIncomes(), exp=yearExpenses();
+  const allYears = getAllYearOptions();
+  const yr = allYears.find(y=>y.id===reportYearId) || allYears[0] || getYear();
+  reportYearId = yr.id;
+  const inc=getIncomesForYear(yr.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const exp=getExpensesForYear(yr.id).sort((a,b)=>a.date.localeCompare(b.date));
   const tI=inc.reduce((s,i)=>s+i.amount,0), tE=exp.reduce((s,e)=>s+e.amount,0), bal=tI-tE;
+  
+  const yearOpts = allYears.map(y=>`<option value="${y.id}"${y.id===reportYearId?' selected':''}>${y.name}</option>`).join('');
   
   const incByCat={}, expByCat={};
   inc.forEach(i=>{incByCat[i.category]=(incByCat[i.category]||0)+i.amount});
@@ -671,8 +740,8 @@ function renderReport(){
   const incRows=iCats.map(([c,a])=>`<tr><td>${c}</td><td class="num">¥${fmt(a)}</td></tr>`).join('');
   const expRows=eCats.map(([c,a])=>`<tr><td>${c}</td><td class="num">¥${fmt(a)}</td></tr>`).join('');
   
-  const incDetail = inc.sort((a,b)=>a.date.localeCompare(b.date)).map(i=>`<tr><td>${fmtShort(i.date)}</td><td>${i.category}</td><td class="num">¥${fmt(i.amount)}</td><td>${i.memo||'—'}</td></tr>`).join('');
-  const expDetail = exp.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<tr><td>${fmtShort(e.date)}</td><td>${e.category}</td><td class="num">¥${fmt(e.amount)}</td><td>${e.payee||'—'}</td><td>${e.memo||'—'}</td></tr>`).join('');
+  const incDetail = inc.map(i=>`<tr><td>${fmtShort(i.date)}</td><td>${i.category}</td><td class="num">¥${fmt(i.amount)}</td><td>${i.memo||'—'}</td></tr>`).join('');
+  const expDetail = exp.map(e=>`<tr><td>${fmtShort(e.date)}</td><td>${e.category}</td><td class="num">¥${fmt(e.amount)}</td><td>${e.payee||'—'}</td><td>${e.memo||'—'}</td></tr>`).join('');
   
   const memberRows = D.members.map(m=>{
     const dues=inc.filter(i=>i.memberId===m.id&&i.category==='団費').reduce((s,i)=>s+i.amount,0);
@@ -687,6 +756,7 @@ function renderReport(){
         <button onclick="window.print()" title="印刷">${IC.print}</button>
       </div>
     </div>
+    <div class="fg no-print" style="margin-top:8px"><label class="fl">報告年度</label><select class="fsel" onchange="reportYearId=this.value;render()">${yearOpts}</select></div>
     <div style="padding:0 12px">
       <div class="rtit">${yr?.name} 収支決算報告書</div>
       <div class="rsub">期間：${yr?.startDate?.replace(/-/g,'/')} 〜 ${yr?.endDate?.replace(/-/g,'/')}</div>
@@ -716,12 +786,13 @@ function renderReport(){
 }
 
 window.exportCSV = () => {
-  const inc=yearIncomes(), exp=yearExpenses();
+  const yr = D.years.find(y=>y.id===reportYearId) || getYear();
+  const inc=getIncomesForYear(yr.id), exp=getExpensesForYear(yr.id);
   let csv = "種別,日付,カテゴリー,金額,メモ,支払先/団員\n";
   inc.forEach(i=>{const m=D.members.find(x=>x.id===i.memberId);csv+=`収入,${i.date},${i.category},${i.amount},${i.memo||''},${m?m.name:''}\n`;});
   exp.forEach(e=>{csv+=`支出,${e.date},${e.category},${e.amount},${e.memo||''},${e.payee||''}\n`;});
   const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${getYear()?.name||'会計'}_収支データ.csv`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${yr?.name||'会計'}_収支データ.csv`;a.click();
 };
 
 // ═══════════════════════════════════
@@ -758,8 +829,14 @@ window.openMemberForm = (id) => {
       <div class="modal-h"><h2>${m?'団員編集':'団員追加'}</h2><button class="modal-c" onclick="closeModal()">${IC.close}</button></div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
         <div><label class="fl">氏名 *</label><input class="fi" id="mfName" value="${m?m.name:''}" placeholder="山田 太郎"></div>
-        <div><label class="fl">加入日</label><input class="fi" type="date" id="mfJoin" value="${m?m.joinDate:todayStr()}"></div>
-        <div><label class="fl">退団日（任意）</label><input class="fi" type="date" id="mfLeave" value="${m?.leaveDate||''}"></div>
+        <div><label class="fl">加入日</label><input class="fi" type="date" id="mfJoin" value="${m?m.joinDate:todayStr()}" onchange="if(!this.value){this.value='${m?m.joinDate:todayStr()}'}"></div>
+        <div>
+          <label class="fl">退団日（任意）</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="fi" type="date" id="mfLeave" value="${m?.leaveDate||''}" style="flex:1" onchange="">
+            <button class="btn btn-sm btn-out" style="white-space:nowrap;color:var(--red);border-color:var(--red)" onclick="document.getElementById('mfLeave').value=''">削除</button>
+          </div>
+        </div>
         <div><label class="fl">備考</label><input class="fi" id="mfNote" value="${m?.note||''}" placeholder="パート等"></div>
         <button class="btn btn-o" style="width:100%;padding:14px;font-size:16px;border-radius:25px" onclick="saveMember('${id||''}')">${m?'更新する':'追加する'}</button>
       </div>
