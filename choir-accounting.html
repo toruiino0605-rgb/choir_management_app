@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="合唱団会計">
+<meta name="theme-color" content="#F5A623">
+<title>合唱団会計管理</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi5ZCI5ZSx5Zuj5Lya6KiI566h55CGIiwic2hvcnRfbmFtZSI6IuS8muioiCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjRkFGOUY3IiwidGhlbWVfY29sb3IiOiIjRjVBNjIzIn0=">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23F5A623'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='white'>♪</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-size:16px!important;font-family:'Noto Sans JP',sans-serif}
+input[type="number"]{font-size:24px!important}
+:root{
+--orange:#F5A623;--orange-light:#FFF3E0;--orange-dark:#E8950F;
+--green:#4CAF50;--green-light:#E8F5E9;
+--red:#EF5350;--red-light:#FFEBEE;
+--bg:#FAF9F7;--card:#FFF;--text:#2D2D2D;--text-sub:#888;--border:#F0EEEB;
+--shadow:0 1px 4px rgba(0,0,0,.06);--radius:12px;
+--tab-h:64px;--safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 8px);-webkit-overflow-scrolling:touch}
+/* Tab bar */
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:var(--card);border-top:1px solid var(--border);padding-bottom:var(--safe-b);z-index:100;height:calc(var(--tab-h) + var(--safe-b))}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;color:var(--text-sub);font-size:10px;font-weight:500;font-family:inherit;cursor:pointer;padding:6px 0;transition:color .2s}
+.tab.on{color:var(--orange)}
+.tab svg{width:22px;height:22px}
+/* Header */
+.hdr{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative}
+.hdr h1{font-size:16px;font-weight:600}
+.hdr-r{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:6px}
+.hdr-r button{background:none;border:none;color:var(--orange);cursor:pointer;padding:4px}
+/* Toggle */
+.tog{display:flex;margin:12px 16px;background:#F0EEEB;border-radius:25px;padding:3px}
+.tog button{flex:1;padding:8px 0;border-radius:22px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;background:transparent;color:var(--text-sub)}
+.tog .on-e{background:var(--orange);color:#fff}
+.tog .on-i{background:var(--green);color:#fff}
+/* Date selector */
+.dsel{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 16px}
+.dsel span{font-size:15px;font-weight:500;min-width:180px;text-align:center}
+.dbtn{background:none;border:none;cursor:pointer;color:var(--text-sub);padding:8px;border-radius:50%}
+.dbtn:active{background:var(--border)}
+/* Amount */
+.amt-wrap{display:flex;align-items:center;gap:8px;padding:0 16px;margin:8px 0 12px}
+.amt-wrap label{font-size:14px;font-weight:600;white-space:nowrap}
+.amt-in{flex:1;padding:10px 12px;border:none;border-bottom:2px solid var(--border);font-size:24px!important;font-weight:600;font-family:inherit;background:var(--orange-light);border-radius:6px 6px 0 0;outline:none;text-align:right}
+.amt-in:focus{border-bottom-color:var(--orange)}
+.amt-u{font-size:16px;font-weight:600;color:var(--text-sub)}
+/* Category grid */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 16px}
+.cat-it{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:var(--text)}
+.cat-it.sel{border-color:var(--orange);background:var(--orange-light)}
+.cat-it.sel-i{border-color:var(--green);background:var(--green-light)}
+.cat-it.dash{border-style:dashed;color:var(--text-sub)}
+/* Form */
+.fg{padding:0 16px;margin-bottom:12px}
+.fl{font-size:12px;color:var(--text-sub);margin-bottom:4px;display:block;font-weight:500}
+.fi{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px!important;font-family:inherit;background:var(--card);color:var(--text);outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--orange)}
+.fsel{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px!important;font-family:inherit;background:var(--card);color:var(--text);outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+/* Submit */
+.sbtn{margin:16px;padding:14px;border-radius:25px;border:none;font-size:16px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;transition:opacity .2s;width:calc(100% - 32px)}
+.sbtn:active{opacity:.8}
+.sbtn-e{background:linear-gradient(135deg,var(--orange),var(--orange-dark))}
+.sbtn-i{background:linear-gradient(135deg,var(--green),#388E3C)}
+/* Section title */
+.stit{font-size:13px;font-weight:600;color:var(--text-sub);padding:12px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+.stit button{background:none;border:none;color:var(--orange);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+/* Tx list */
+.txl{padding:0 16px}
+.txi{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.tx-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-cat{font-size:14px;font-weight:500}
+.tx-memo{font-size:11px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-amt{font-size:15px;font-weight:600;text-align:right;white-space:nowrap}
+.tx-amt.inc{color:var(--green)}.tx-amt.exp{color:var(--red)}
+/* Summary */
+.srow{display:flex;gap:10px;padding:12px 16px}
+.scard{flex:1;background:var(--card);border-radius:var(--radius);padding:14px 12px;box-shadow:var(--shadow);text-align:center}
+.scard .lb{font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:4px}
+.scard .vl{font-size:18px;font-weight:700}
+.vl.inc{color:var(--green)}.vl.exp{color:var(--red)}.vl.bal{color:var(--orange)}
+/* FAB */
+.fab{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);right:calc(50% - 220px);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;border:none;box-shadow:0 4px 16px rgba(245,166,35,.4);cursor:pointer;z-index:90;transition:transform .2s}
+.fab:active{transform:scale(.92)}
+/* Calendar */
+.cw{padding:8px 12px}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 10px}
+.ch h2{font-size:16px;font-weight:600}
+.cwk{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--text-sub);font-weight:500;margin-bottom:4px}
+.cgr{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;border-radius:8px;cursor:pointer;position:relative;transition:background .15s;gap:1px}
+.cd:active{background:#F0EEEB}
+.cd.tod{background:var(--orange-light);font-weight:700}
+.cd.sel{background:var(--orange);color:#fff;font-weight:600}
+.cd.oth{color:#ccc}
+.cd .dot{font-size:7px;line-height:1}
+.dot.di{color:var(--green)}.dot.de{color:var(--red)}
+.cd.sel .dot{color:rgba(255,255,255,.7)}
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:12px 16px;overflow:hidden}
+.card-h{padding:14px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-b{padding:12px 16px}
+/* Chart bars */
+.cb-wrap{display:flex;align-items:flex-end;gap:6px;height:160px;padding:0 16px 8px}
+.cb-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cb{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .4s}
+.cb-lb{font-size:9px;color:var(--text-sub)}
+/* Legend */
+.leg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 16px}
+.leg-it{display:flex;align-items:center;gap:4px;font-size:11px}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+/* Report table */
+.rtbl{width:100%;border-collapse:collapse;font-size:12px}
+.rtbl th,.rtbl td{padding:8px 6px;border:1px solid #ddd;text-align:left}
+.rtbl th{background:#f5f5f5;font-weight:600;font-size:11px}
+.rtbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.rtit{font-size:18px;font-weight:700;text-align:center;margin:16px 0 8px}
+.rsub{font-size:12px;text-align:center;color:var(--text-sub);margin-bottom:16px}
+.rsec{font-size:13px;font-weight:600;padding:16px 0 6px;border-bottom:2px solid #333}
+/* Member */
+.mi{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.mav{width:40px;height:40px;border-radius:50%;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--orange);flex-shrink:0}
+.minfo{flex:1}.mname{font-size:14px;font-weight:500}.msub{font-size:11px;color:var(--text-sub)}
+.macts{display:flex;gap:8px}
+.macts button{background:none;border:none;cursor:pointer;padding:6px;color:var(--text-sub);border-radius:6px}
+.macts button:active{background:var(--border)}
+/* Settings */
+.si{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.si .lb{font-size:14px}.si .vl{font-size:13px;color:var(--text-sub)}
+/* Buttons */
+.btn{padding:10px 20px;border-radius:8px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:opacity .2s}
+.btn:active{opacity:.8}
+.btn-o{background:var(--orange);color:#fff}
+.btn-g{background:var(--green);color:#fff}
+.btn-out{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-d{background:var(--red);color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px}
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fi .2s}
+.modal{background:var(--bg);width:100%;max-width:480px;max-height:92vh;border-radius:16px 16px 0 0;overflow-y:auto;animation:su .3s;padding-bottom:calc(var(--safe-b) + 16px)}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1}
+.modal-h h2{font-size:16px;font-weight:600}
+.modal-c{background:none;border:none;cursor:pointer;color:var(--text-sub);padding:4px}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+/* Confirm */
+.conf-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center}
+.conf{background:#fff;border-radius:14px;padding:24px;width:280px;text-align:center}
+.conf h3{font-size:16px;margin-bottom:8px}
+.conf p{font-size:13px;color:var(--text-sub);margin-bottom:16px}
+.conf-a{display:flex;gap:10px;justify-content:center}
+/* Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:300;background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;animation:fi .3s;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+/* Empty */
+.empty{text-align:center;padding:40px 20px;color:var(--text-sub)}
+.empty p{font-size:13px}
+/* Print */
+@media print{.tabs,.fab,.hdr,.no-print{display:none!important}.main{padding-bottom:0!important;overflow:visible!important}.app{max-width:100%!important;height:auto!important}.rtbl{font-size:10px}.rtbl th,.rtbl td{padding:4px}}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<script>
+// ─── Minimal VDOM-less framework ───
+// We'll use vanilla JS with a simple component system
+
+const DB_KEY = 'choir_accounting_v1';
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2,9)+Date.now().toString(36));
+const fmt = n => Number(n).toLocaleString('ja-JP');
+const toDS = d => { const dt=new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
+const todayStr = () => toDS(new Date());
+const fmtFull = d => { const dt=new Date(d); const w=["日","月","火","水","木","金","土"]; return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日(${w[dt.getDay()]})`; };
+const fmtShort = d => { const dt=new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; };
+
+// ─── SVG Icons ───
+const IC = {
+  edit:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  cal:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  chart:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  report:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  members:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+  settings:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+  plus:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  chevL:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  chevR:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  close:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',
+  editS:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  dl:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  ul:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  print:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+};
+
+// Category icons as inline SVG
+function catIcon(cat, type) {
+  const incIcons = {
+    "団費":'<circle cx="16" cy="16" r="14" fill="#FFF3E0" stroke="#F5A623" stroke-width="1.5"/><text x="16" y="21" text-anchor="middle" font-size="16" fill="#F5A623">¥</text>',
+    "臨時徴収":'<circle cx="16" cy="16" r="14" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1.5"/><text x="16" y="21" text-anchor="middle" font-size="14" fill="#4CAF50">臨</text>',
+    "寄付":'<circle cx="16" cy="16" r="14" fill="#FCE4EC" stroke="#E91E63" stroke-width="1.5"/><path d="M16 24s-7-4.5-7-9a4 4 0 017-2.5A4 4 0 0123 15c0 4.5-7 9-7 9z" fill="#E91E63" opacity=".7"/>',
+  };
+  const expIcons = {
+    "会場費":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#FFF3E0" stroke="#FF9800" stroke-width="1.5"/><path d="M8 24V14l8-6 8 6v10H8z" fill="#FF9800" opacity=".6"/><rect x="13" y="18" width="6" height="6" fill="#FFF3E0"/>',
+    "楽譜":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#E8EAF6" stroke="#5C6BC0" stroke-width="1.5"/><path d="M10 10h12M10 14h12M10 18h8M10 22h10" stroke="#5C6BC0" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><circle cx="22" cy="22" r="3" fill="#5C6BC0" opacity=".5"/>',
+    "備品":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#E0F7FA" stroke="#00ACC1" stroke-width="1.5"/><rect x="10" y="12" width="12" height="10" rx="2" fill="#00ACC1" opacity=".5"/><path d="M14 12V9a2 2 0 014 0v3" stroke="#00ACC1" stroke-width="1.5"/>',
+    "交通費":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#FBE9E7" stroke="#FF5722" stroke-width="1.5"/><rect x="8" y="10" width="16" height="12" rx="3" fill="#FF5722" opacity=".5"/><circle cx="12" cy="24" r="2" fill="#FF5722" opacity=".7"/><circle cx="20" cy="24" r="2" fill="#FF5722" opacity=".7"/>',
+    "謝礼":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#F3E5F5" stroke="#9C27B0" stroke-width="1.5"/><circle cx="16" cy="16" r="5" stroke="#9C27B0" stroke-width="1.5" fill="none" opacity=".5"/><text x="16" y="20" text-anchor="middle" font-size="10" fill="#9C27B0">謝</text>',
+    "印刷費":'<rect x="3" y="3" width="26" height="26" rx="6" fill="#EFEBE9" stroke="#795548" stroke-width="1.5"/><rect x="9" y="14" width="14" height="8" rx="1" fill="#795548" opacity=".4"/><path d="M11 14v-4h10v4" stroke="#795548" stroke-width="1.5"/><rect x="11" y="19" width="10" height="5" fill="#EFEBE9"/>',
+  };
+  const def = type==='income'
+    ? '<circle cx="16" cy="16" r="14" fill="#E3F2FD" stroke="#2196F3" stroke-width="1.5"/><text x="16" y="21" text-anchor="middle" font-size="14" fill="#2196F3">他</text>'
+    : '<rect x="3" y="3" width="26" height="26" rx="6" fill="#ECEFF1" stroke="#607D8B" stroke-width="1.5"/><circle cx="11" cy="16" r="2" fill="#607D8B" opacity=".6"/><circle cx="16" cy="16" r="2" fill="#607D8B" opacity=".6"/><circle cx="21" cy="16" r="2" fill="#607D8B" opacity=".6"/>';
+  const icons = type==='income' ? incIcons : expIcons;
+  return `<svg width="28" height="28" viewBox="0 0 32 32">${icons[cat]||def}</svg>`;
+}
+
+// ─── Data Store ───
+let D;
+function defaultData(){return{
+  years:[{id:"2025",name:"2025年度",startDate:"2025-04-01",endDate:"2026-03-31"}],
+  members:[],incomes:[],expenses:[],
+  incomeCategories:["団費","臨時徴収","寄付","その他"],
+  expenseCategories:["会場費","楽譜","備品","交通費","謝礼","印刷費","その他"],
+  settings:{currentYearId:"2025"}
+}}
+function loadDB(){try{const s=localStorage.getItem(DB_KEY);return s?{...defaultData(),...JSON.parse(s)}:defaultData()}catch(e){return defaultData()}}
+function saveDB(){try{localStorage.setItem(DB_KEY,JSON.stringify(D))}catch(e){}}
+D = loadDB();
+
+// ─── State ───
+let activeTab = 0;
+let toastTimer = null;
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const h = (tag, cls, html, attrs) => {
+  let el = `<${tag}${cls?' class="'+cls+'"':''}`;
+  if(attrs) for(const[k,v]of Object.entries(attrs)) el+=` ${k}="${v}"`;
+  el += `>${html||''}</${tag}>`;
+  return el;
+};
+
+function showToast(msg){
+  let t=$('.toast');
+  if(t)t.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div class="toast">${msg}</div>`);
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{const t=$('.toast');if(t)t.remove()},2000);
+}
+
+function getYear(){return D.years.find(y=>y.id===D.settings.currentYearId)||D.years[0]}
+function yearIncomes(){return D.incomes.filter(i=>i.yearId===getYear()?.id).sort((a,b)=>b.date.localeCompare(a.date))}
+function yearExpenses(){return D.expenses.filter(e=>e.yearId===getYear()?.id).sort((a,b)=>b.date.localeCompare(a.date))}
+
+// ─── Render ───
+function render(){
+  const yr = getYear();
+  const tabLabels = [
+    {l:'入力',i:IC.edit},{l:'カレンダー',i:IC.cal},{l:'グラフ',i:IC.chart},
+    {l:'報告書',i:IC.report},{l:'メンバー',i:IC.members},{l:'設定',i:IC.settings}
+  ];
+  let mainHTML = '';
+  switch(activeTab){
+    case 0: mainHTML = renderInput(); break;
+    case 1: mainHTML = renderCalendar(); break;
+    case 2: mainHTML = renderChart(); break;
+    case 3: mainHTML = renderReport(); break;
+    case 4: mainHTML = renderMembers(); break;
+    case 5: mainHTML = renderSettings(); break;
+  }
+  const tabsHTML = tabLabels.map((t,i)=>
+    `<button class="tab ${activeTab===i?'on':''}" onclick="switchTab(${i})">${t.i}<span>${t.l}</span></button>`
+  ).join('');
+  
+  $('#app').innerHTML = `<div class="main" id="main">${mainHTML}</div><div class="tabs">${tabsHTML}</div>`;
+  bindEvents();
+}
+
+function switchTab(i){activeTab=i;render();}
+window.switchTab=switchTab;
+
+// ═══════════════════════════════════
+// INPUT TAB
+// ═══════════════════════════════════
+let inputState = { mode:'expense', date:todayStr(), category:'', amount:'', memo:'', payee:'', memberId:'' };
+
+function renderInput(){
+  const s = inputState;
+  const yr = getYear();
+  const cats = s.mode==='expense' ? D.expenseCategories : D.incomeCategories;
+  const catType = s.mode==='expense' ? 'expense' : 'income';
+  
+  let catGrid = cats.map(c =>
+    `<div class="cat-it ${s.category===c?(s.mode==='expense'?'sel':'sel-i'):''}" onclick="inputCat('${c}')">${catIcon(c,catType)}<span>${c}</span></div>`
+  ).join('');
+  catGrid += `<div class="cat-it dash" onclick="openCatEditor('${catType}')">${IC.editS}<span>編集・追加</span></div>`;
+
+  let memberSel = '';
+  if(s.mode==='income' && (s.category==='団費'||s.category==='臨時徴収')){
+    const opts = D.members.filter(m=>!m.leaveDate).map(m=>`<option value="${m.id}"${s.memberId===m.id?' selected':''}>${m.name}</option>`).join('');
+    memberSel = `<div class="fg"><label class="fl">団員</label><select class="fsel" onchange="inputState.memberId=this.value"><option value="">-- 選択 --</option>${opts}</select></div>`;
+  }
+  let payeeField = '';
+  if(s.mode==='expense'){
+    payeeField = `<div class="fg"><label class="fl">支払先</label><input class="fi" placeholder="任意" value="${s.payee}" oninput="inputState.payee=this.value"></div>`;
+  }
+
+  return `
+    <div class="hdr"><h1>${yr?.name||'年度未設定'}</h1></div>
+    <div class="tog">
+      <button class="${s.mode==='expense'?'on-e':''}" onclick="inputMode('expense')">支出</button>
+      <button class="${s.mode==='income'?'on-i':''}" onclick="inputMode('income')">収入</button>
+    </div>
+    <div class="dsel">
+      <button class="dbtn" onclick="inputDateShift(-1)">${IC.chevL}</button>
+      <span>${fmtFull(s.date)}</span>
+      <button class="dbtn" onclick="inputDateShift(1)">${IC.chevR}</button>
+    </div>
+    <div class="amt-wrap">
+      <label>${s.mode==='expense'?'支出':'収入'}</label>
+      <input class="amt-in" type="number" inputmode="numeric" placeholder="0" value="${s.amount}" oninput="inputState.amount=this.value" id="amtInput">
+      <span class="amt-u">円</span>
+    </div>
+    <div class="stit"><span>カテゴリー</span></div>
+    <div class="cat-grid">${catGrid}</div>
+    ${memberSel}
+    ${payeeField}
+    <div class="fg"><label class="fl">メモ</label><input class="fi" placeholder="任意" value="${s.memo}" oninput="inputState.memo=this.value"></div>
+    <button class="sbtn ${s.mode==='expense'?'sbtn-e':'sbtn-i'}" onclick="submitInput()">${s.mode==='expense'?'支出を入力する':'収入を入力する'}</button>
+  `;
+}
+
+window.inputMode = m => { inputState.mode=m; inputState.category=''; render(); };
+window.inputDateShift = dir => { const d=new Date(inputState.date); d.setDate(d.getDate()+dir); inputState.date=toDS(d); render(); };
+window.inputCat = c => { inputState.category=c; render(); };
+window.submitInput = () => {
+  const s=inputState;
+  if(!s.category){showToast('カテゴリーを選択してください');return;}
+  if(!s.amount||Number(s.amount)<=0){showToast('金額を入力してください');return;}
+  if(s.mode==='expense'){
+    D.expenses.push({id:uuid(),date:s.date,category:s.category,amount:Number(s.amount),payee:s.payee,memo:s.memo,yearId:getYear().id});
+  } else {
+    D.incomes.push({id:uuid(),date:s.date,type:s.category==='団費'||s.category==='臨時徴収'?'collection':s.category==='寄付'?'donation':'other',
+      memberId:s.memberId||null,category:s.category,amount:Number(s.amount),memo:s.memo,yearId:getYear().id});
+  }
+  saveDB();
+  showToast(`${s.mode==='expense'?'支出':'収入'}を登録しました`);
+  inputState.amount='';inputState.memo='';inputState.payee='';inputState.memberId='';inputState.category='';
+  render();
+};
+
+// ═══════════════════════════════════
+// CALENDAR TAB
+// ═══════════════════════════════════
+let calState = { viewDate: new Date(), selectedDate: todayStr() };
+
+function renderCalendar(){
+  const vd = calState.viewDate;
+  const yr = vd.getFullYear(), mo = vd.getMonth();
+  const firstDay = new Date(yr,mo,1).getDay();
+  const dim = new Date(yr,mo+1,0).getDate();
+  const prevDim = new Date(yr,mo,0).getDate();
+  const inc = yearIncomes(), exp = yearExpenses();
+  
+  // Monthly totals
+  const mInc = inc.filter(i=>{const d=new Date(i.date);return d.getMonth()===mo&&d.getFullYear()===yr}).reduce((s,i)=>s+i.amount,0);
+  const mExp = exp.filter(e=>{const d=new Date(e.date);return d.getMonth()===mo&&d.getFullYear()===yr}).reduce((s,e)=>s+e.amount,0);
+  
+  // Day amounts map
+  const dayMap = {};
+  inc.forEach(i=>{if(!dayMap[i.date])dayMap[i.date]={i:0,e:0};dayMap[i.date].i+=i.amount;});
+  exp.forEach(e=>{if(!dayMap[e.date])dayMap[e.date]={i:0,e:0};dayMap[e.date].e+=e.amount;});
+  
+  let days = [];
+  for(let i=firstDay-1;i>=0;i--) days.push({d:prevDim-i,cur:false});
+  for(let i=1;i<=dim;i++) days.push({d:i,cur:true});
+  const rem=7-(days.length%7); if(rem<7) for(let i=1;i<=rem;i++) days.push({d:i,cur:false});
+  
+  const daysHTML = days.map(dd=>{
+    const ds = dd.cur ? `${yr}-${String(mo+1).padStart(2,'0')}-${String(dd.d).padStart(2,'0')}` : '';
+    const a = ds ? dayMap[ds] : null;
+    const isT = ds===todayStr(), isS = ds===calState.selectedDate;
+    let cls = 'cd'; if(!dd.cur)cls+=' oth'; if(isT)cls+=' tod'; if(isS)cls+=' sel';
+    let dots = '';
+    if(a){
+      dots='<div style="display:flex;gap:2px">';
+      if(a.i>0) dots+='<span class="dot di">●</span>';
+      if(a.e>0) dots+='<span class="dot de">●</span>';
+      dots+='</div>';
+    }
+    return `<div class="${cls}" onclick="calDayClick('${ds}')">${dd.d}${dots}</div>`;
+  }).join('');
+  
+  // Selected day transactions
+  const sd = calState.selectedDate;
+  const dayTx = [...inc.filter(i=>i.date===sd).map(i=>({...i,_t:'income'})),...exp.filter(e=>e.date===sd).map(e=>({...e,_t:'expense'}))];
+  let txHTML = '';
+  if(dayTx.length===0) txHTML='<div class="empty"><p>この日の記録はありません</p></div>';
+  else txHTML = dayTx.map(tx=>{
+    const ic = catIcon(tx.category, tx._t);
+    return `<div class="txi">
+      <div class="tx-icon">${ic}</div>
+      <div class="tx-info"><div class="tx-cat">${tx.category}</div><div class="tx-memo">${tx.memo||tx.payee||'—'}</div></div>
+      <div class="tx-amt ${tx._t==='income'?'inc':'exp'}">${tx._t==='income'?'+':'−'}¥${fmt(tx.amount)}</div>
+      <button style="background:none;border:none;padding:4px;cursor:pointer;color:#ccc" onclick="deleteTx('${tx.id}','${tx._t}')">${IC.trash}</button>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="hdr"><h1>カレンダー</h1></div>
+    <div class="srow">
+      <div class="scard"><div class="lb">収入</div><div class="vl inc">¥${fmt(mInc)}</div></div>
+      <div class="scard"><div class="lb">支出</div><div class="vl exp">¥${fmt(mExp)}</div></div>
+    </div>
+    <div class="cw">
+      <div class="ch">
+        <button class="dbtn" onclick="calMonth(-1)">${IC.chevL}</button>
+        <h2>${yr}年${mo+1}月</h2>
+        <button class="dbtn" onclick="calMonth(1)">${IC.chevR}</button>
+      </div>
+      <div class="cwk">${["日","月","火","水","木","金","土"].map(d=>`<div>${d}</div>`).join('')}</div>
+      <div class="cgr">${daysHTML}</div>
+    </div>
+    <div style="padding:8px 16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:600">${fmtFull(sd)}</span>
+      <button class="btn btn-o btn-sm" onclick="openAddModal('${sd}')" style="display:flex;align-items:center;gap:4px">${IC.plus}<span style="font-size:12px">追加</span></button>
+    </div>
+    <div class="txl">${txHTML}</div>
+    <button class="fab" onclick="openAddModal('${sd}')">${IC.plus}</button>
+  `;
+}
+
+window.calMonth = dir => { calState.viewDate.setMonth(calState.viewDate.getMonth()+dir); render(); };
+window.calDayClick = ds => { if(ds){ calState.selectedDate=ds; render(); }};
+window.deleteTx = (id, type) => {
+  if(type==='income') D.incomes=D.incomes.filter(i=>i.id!==id);
+  else D.expenses=D.expenses.filter(e=>e.id!==id);
+  saveDB(); showToast('削除しました'); render();
+};
+
+// ═══════════════════════════════════
+// ADD MODAL
+// ═══════════════════════════════════
+let addState = { mode:'expense', date:'', category:'', amount:'', memo:'', payee:'', memberId:'', editingCats:false, newCat:'' };
+
+window.openAddModal = (date) => {
+  addState = { mode:'expense', date:date||todayStr(), category:'', amount:'', memo:'', payee:'', memberId:'', editingCats:false, newCat:'' };
+  renderAddModal();
+};
+
+function renderAddModal(){
+  const s = addState;
+  const catKey = s.mode==='expense' ? 'expenseCategories' : 'incomeCategories';
+  const cats = D[catKey];
+  const catType = s.mode==='expense' ? 'expense' : 'income';
+  
+  let catSection = '';
+  if(s.editingCats){
+    const items = cats.map(c =>
+      `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">${c}</span>
+        <button style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px" onclick="modalRemoveCat('${c}')">${IC.trash}</button>
+      </div>`
+    ).join('');
+    catSection = `<div style="padding:0 16px 12px">
+      ${items}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="fi" style="flex:1" placeholder="新しいカテゴリー" id="modalNewCat" value="${s.newCat}" oninput="addState.newCat=this.value">
+        <button class="btn btn-o btn-sm" onclick="modalAddCat()">追加</button>
+      </div>
+    </div>`;
+  } else {
+    let grid = cats.map(c =>
+      `<div class="cat-it ${s.category===c?(s.mode==='expense'?'sel':'sel-i'):''}" onclick="modalCat('${c}')">${catIcon(c,catType)}<span>${c}</span></div>`
+    ).join('');
+    grid += `<div class="cat-it dash" onclick="addState.editingCats=true;renderAddModal()">${IC.editS}<span>編集・追加</span></div>`;
+    catSection = `<div class="cat-grid">${grid}</div>`;
+  }
+
+  let memberSel = '';
+  if(s.mode==='income' && (s.category==='団費'||s.category==='臨時徴収')){
+    const opts = D.members.filter(m=>!m.leaveDate).map(m=>`<option value="${m.id}"${s.memberId===m.id?' selected':''}>${m.name}</option>`).join('');
+    memberSel = `<div class="fg"><label class="fl">団員</label><select class="fsel" onchange="addState.memberId=this.value"><option value="">-- 選択 --</option>${opts}</select></div>`;
+  }
+  let payeeField = '';
+  if(s.mode==='expense') payeeField = `<div class="fg"><label class="fl">支払先</label><input class="fi" placeholder="任意" value="${s.payee}" oninput="addState.payee=this.value"></div>`;
+
+  const html = `<div class="modal-ov" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-h"><h2>新規登録</h2><button class="modal-c" onclick="closeModal()">${IC.close}</button></div>
+      <div class="tog">
+        <button class="${s.mode==='expense'?'on-e':''}" onclick="addState.mode='expense';addState.category='';addState.editingCats=false;renderAddModal()">支出</button>
+        <button class="${s.mode==='income'?'on-i':''}" onclick="addState.mode='income';addState.category='';addState.editingCats=false;renderAddModal()">収入</button>
+      </div>
+      <div class="fg"><label class="fl">日付</label><input class="fi" type="date" value="${s.date}" onchange="addState.date=this.value"></div>
+      <div class="amt-wrap">
+        <label>${s.mode==='expense'?'支出':'収入'}</label>
+        <input class="amt-in" type="number" inputmode="numeric" placeholder="0" value="${s.amount}" oninput="addState.amount=this.value">
+        <span class="amt-u">円</span>
+      </div>
+      <div class="stit"><span>カテゴリー</span>${s.editingCats?`<button onclick="addState.editingCats=false;renderAddModal()">完了</button>`:''}</div>
+      ${catSection}
+      ${memberSel}
+      ${payeeField}
+      <div class="fg"><label class="fl">メモ</label><input class="fi" placeholder="任意" value="${s.memo}" oninput="addState.memo=this.value"></div>
+      <div style="padding:0 16px"><button class="sbtn ${s.mode==='expense'?'sbtn-e':'sbtn-i'}" onclick="submitAdd()">${s.mode==='expense'?'支出を入力する':'収入を入力する'}</button></div>
+    </div>
+  </div>`;
+  
+  let existing = document.getElementById('modalLayer');
+  if(!existing){ existing=document.createElement('div');existing.id='modalLayer';document.body.appendChild(existing); }
+  existing.innerHTML = html;
+}
+
+window.closeModal = () => { const l=document.getElementById('modalLayer'); if(l)l.innerHTML=''; };
+window.modalCat = c => { addState.category=c; renderAddModal(); };
+window.modalAddCat = () => {
+  const catKey = addState.mode==='expense' ? 'expenseCategories' : 'incomeCategories';
+  if(!addState.newCat.trim()) return;
+  if(D[catKey].includes(addState.newCat.trim())){showToast('既に存在します');return;}
+  D[catKey].push(addState.newCat.trim()); saveDB(); addState.newCat=''; showToast('追加しました'); renderAddModal();
+};
+window.modalRemoveCat = c => {
+  const catKey = addState.mode==='expense' ? 'expenseCategories' : 'incomeCategories';
+  D[catKey] = D[catKey].filter(x=>x!==c); saveDB();
+  if(addState.category===c) addState.category='';
+  showToast('削除しました'); renderAddModal();
+};
+window.submitAdd = () => {
+  const s=addState;
+  if(!s.category){showToast('カテゴリーを選択してください');return;}
+  if(!s.amount||Number(s.amount)<=0){showToast('金額を入力してください');return;}
+  if(s.mode==='expense'){
+    D.expenses.push({id:uuid(),date:s.date,category:s.category,amount:Number(s.amount),payee:s.payee,memo:s.memo,yearId:getYear().id});
+  } else {
+    D.incomes.push({id:uuid(),date:s.date,type:s.category==='団費'||s.category==='臨時徴収'?'collection':s.category==='寄付'?'donation':'other',
+      memberId:s.memberId||null,category:s.category,amount:Number(s.amount),memo:s.memo,yearId:getYear().id});
+  }
+  saveDB(); showToast(`${s.mode==='expense'?'支出':'収入'}を登録しました`); closeModal(); render();
+};
+
+// ═══════════════════════════════════
+// CATEGORY EDITOR (from input tab)
+// ═══════════════════════════════════
+window.openCatEditor = (type) => {
+  const catKey = type==='expense' ? 'expenseCategories' : 'incomeCategories';
+  const renderCE = () => {
+    const cats = D[catKey];
+    const items = cats.map(c =>
+      `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">${c}</span>
+        <button style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px" onclick="ceDel('${c}')">${IC.trash}</button>
+      </div>`
+    ).join('');
+    const html = `<div class="modal-ov" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-h"><h2>${type==='income'?'収入':'支出'}カテゴリー編集</h2><button class="modal-c" onclick="closeModal();render()">${IC.close}</button></div>
+        <div style="padding:16px">
+          ${items}
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <input class="fi" style="flex:1" placeholder="新しいカテゴリー" id="ceNewInput">
+            <button class="btn btn-o btn-sm" onclick="ceAdd()">追加</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    let existing = document.getElementById('modalLayer');
+    if(!existing){existing=document.createElement('div');existing.id='modalLayer';document.body.appendChild(existing);}
+    existing.innerHTML = html;
+  };
+  window.ceAdd = () => {
+    const inp = document.getElementById('ceNewInput');
+    if(!inp||!inp.value.trim()) return;
+    if(D[catKey].includes(inp.value.trim())){showToast('既に存在します');return;}
+    D[catKey].push(inp.value.trim()); saveDB(); showToast('追加しました'); renderCE();
+  };
+  window.ceDel = c => { D[catKey]=D[catKey].filter(x=>x!==c); saveDB(); showToast('削除しました'); renderCE(); };
+  renderCE();
+};
+
+// ═══════════════════════════════════
+// CHART TAB
+// ═══════════════════════════════════
+let chartMode = 'monthly';
+function renderChart(){
+  const inc=yearIncomes(), exp=yearExpenses();
+  const tI=inc.reduce((s,i)=>s+i.amount,0), tE=exp.reduce((s,e)=>s+e.amount,0);
+  const yr=getYear();
+  
+  let content='';
+  if(chartMode==='monthly'){
+    const startM=new Date(yr.startDate).getMonth(), startY=new Date(yr.startDate).getFullYear();
+    let months=[];
+    for(let i=0;i<12;i++){
+      const m=(startM+i)%12, y=startY+Math.floor((startM+i)/12);
+      const key=`${y}-${String(m+1).padStart(2,'0')}`;
+      months.push({
+        label:`${m+1}月`,
+        income:inc.filter(x=>x.date.startsWith(key)).reduce((s,x)=>s+x.amount,0),
+        expense:exp.filter(x=>x.date.startsWith(key)).reduce((s,x)=>s+x.amount,0)
+      });
+    }
+    const max=Math.max(...months.map(m=>Math.max(m.income,m.expense)),1);
+    const bars=months.map(m=>
+      `<div class="cb-item"><div style="display:flex;gap:2px;align-items:flex-end;height:100%;width:100%"><div class="cb" style="flex:1;height:${(m.income/max)*130}px;background:#4CAF50;opacity:.7"></div><div class="cb" style="flex:1;height:${(m.expense/max)*130}px;background:#EF5350;opacity:.7"></div></div><div class="cb-lb">${m.label}</div></div>`
+    ).join('');
+    content = `<div class="card"><div class="card-h">月別 収入・支出</div><div style="padding:12px 0"><div class="cb-wrap">${bars}</div><div class="leg" style="justify-content:center"><div class="leg-it"><div class="leg-dot" style="background:#4CAF50"></div>収入</div><div class="leg-it"><div class="leg-dot" style="background:#EF5350"></div>支出</div></div></div></div>`;
+  } else {
+    const colors=["#F5A623","#4CAF50","#2196F3","#E91E63","#9C27B0","#FF5722","#00BCD4","#795548","#607D8B","#FF9800"];
+    const expByCat={}, incByCat={};
+    exp.forEach(e=>{expByCat[e.category]=(expByCat[e.category]||0)+e.amount});
+    inc.forEach(i=>{incByCat[i.category]=(incByCat[i.category]||0)+i.amount});
+    const eSorted=Object.entries(expByCat).sort((a,b)=>b[1]-a[1]);
+    const iSorted=Object.entries(incByCat).sort((a,b)=>b[1]-a[1]);
+    
+    const renderCatCard = (title, sorted, total) => {
+      if(sorted.length===0) return `<div class="card"><div class="card-h">${title}</div><div class="card-b"><div class="empty"><p>データなし</p></div></div></div>`;
+      const rows = sorted.map(([c,a],i)=>
+        `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="leg-dot" style="background:${colors[i%colors.length]};flex-shrink:0"></div><span style="flex:1;font-size:13px">${c}</span><span style="font-size:13px;font-weight:600">¥${fmt(a)}</span><span style="font-size:11px;color:var(--text-sub);width:40px;text-align:right">${total?Math.round(a/total*100):0}%</span></div>`
+      ).join('');
+      const bar = sorted.map(([c,a],i)=>`<div style="width:${(a/total)*100}%;background:${colors[i%colors.length]}"></div>`).join('');
+      return `<div class="card"><div class="card-h">${title}</div><div class="card-b">${rows}</div><div style="padding:0 16px 12px"><div style="display:flex;height:20px;border-radius:10px;overflow:hidden">${bar}</div></div></div>`;
+    };
+    content = renderCatCard('支出カテゴリー', eSorted, tE) + renderCatCard('収入カテゴリー', iSorted, tI);
+  }
+
+  return `
+    <div class="hdr"><h1>グラフ</h1></div>
+    <div class="srow">
+      <div class="scard"><div class="lb">収入合計</div><div class="vl inc">¥${fmt(tI)}</div></div>
+      <div class="scard"><div class="lb">支出合計</div><div class="vl exp">¥${fmt(tE)}</div></div>
+      <div class="scard"><div class="lb">残高</div><div class="vl bal">¥${fmt(tI-tE)}</div></div>
+    </div>
+    <div class="tog">
+      <button class="${chartMode==='monthly'?'on-e':''}" onclick="chartMode='monthly';render()">月別推移</button>
+      <button class="${chartMode==='category'?'on-i':''}" onclick="chartMode='category';render()">カテゴリー</button>
+    </div>
+    ${content}
+  `;
+}
+
+// ═══════════════════════════════════
+// REPORT TAB
+// ═══════════════════════════════════
+function renderReport(){
+  const yr=getYear(), inc=yearIncomes(), exp=yearExpenses();
+  const tI=inc.reduce((s,i)=>s+i.amount,0), tE=exp.reduce((s,e)=>s+e.amount,0), bal=tI-tE;
+  
+  const incByCat={}, expByCat={};
+  inc.forEach(i=>{incByCat[i.category]=(incByCat[i.category]||0)+i.amount});
+  exp.forEach(e=>{expByCat[e.category]=(expByCat[e.category]||0)+e.amount});
+  const iCats=Object.entries(incByCat).sort((a,b)=>a[0].localeCompare(b[0]));
+  const eCats=Object.entries(expByCat).sort((a,b)=>a[0].localeCompare(b[0]));
+  
+  const incRows=iCats.map(([c,a])=>`<tr><td>${c}</td><td class="num">¥${fmt(a)}</td></tr>`).join('');
+  const expRows=eCats.map(([c,a])=>`<tr><td>${c}</td><td class="num">¥${fmt(a)}</td></tr>`).join('');
+  
+  const incDetail = inc.sort((a,b)=>a.date.localeCompare(b.date)).map(i=>`<tr><td>${fmtShort(i.date)}</td><td>${i.category}</td><td class="num">¥${fmt(i.amount)}</td><td>${i.memo||'—'}</td></tr>`).join('');
+  const expDetail = exp.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<tr><td>${fmtShort(e.date)}</td><td>${e.category}</td><td class="num">¥${fmt(e.amount)}</td><td>${e.payee||'—'}</td><td>${e.memo||'—'}</td></tr>`).join('');
+  
+  const memberRows = D.members.map(m=>{
+    const dues=inc.filter(i=>i.memberId===m.id&&i.category==='団費').reduce((s,i)=>s+i.amount,0);
+    const sp=inc.filter(i=>i.memberId===m.id&&i.category==='臨時徴収').reduce((s,i)=>s+i.amount,0);
+    return `<tr><td>${m.name}${m.leaveDate?' (退団)':''}</td><td class="num">¥${fmt(dues)}</td><td class="num">¥${fmt(sp)}</td><td class="num">¥${fmt(dues+sp)}</td></tr>`;
+  }).join('');
+
+  return `
+    <div class="hdr"><h1>報告書</h1>
+      <div class="hdr-r">
+        <button onclick="exportCSV()" title="CSV出力">${IC.dl}</button>
+        <button onclick="window.print()" title="印刷">${IC.print}</button>
+      </div>
+    </div>
+    <div style="padding:0 12px">
+      <div class="rtit">${yr?.name} 収支決算報告書</div>
+      <div class="rsub">期間：${yr?.startDate?.replace(/-/g,'/')} 〜 ${yr?.endDate?.replace(/-/g,'/')}</div>
+      
+      <div class="rsec">【収入の部】</div>
+      <table class="rtbl"><thead><tr><th style="width:50%">科目</th><th style="width:50%">金額</th></tr></thead>
+      <tbody>${incRows}<tr style="font-weight:700;background:#FFF3E0"><td>収入合計</td><td class="num">¥${fmt(tI)}</td></tr></tbody></table>
+      
+      <div class="rsec">【支出の部】</div>
+      <table class="rtbl"><thead><tr><th style="width:50%">科目</th><th style="width:50%">金額</th></tr></thead>
+      <tbody>${expRows}<tr style="font-weight:700;background:#FFEBEE"><td>支出合計</td><td class="num">¥${fmt(tE)}</td></tr></tbody></table>
+      
+      <table class="rtbl" style="margin-top:16px"><tbody><tr style="font-weight:700;background:#E8F5E9;font-size:14px"><td style="width:50%">差引残高</td><td class="num" style="width:50%">¥${fmt(bal)}</td></tr></tbody></table>
+      
+      <div class="rsec">【収入明細】</div>
+      <table class="rtbl"><thead><tr><th>日付</th><th>科目</th><th>金額</th><th>メモ</th></tr></thead><tbody>${incDetail}</tbody></table>
+      
+      <div class="rsec">【支出明細】</div>
+      <table class="rtbl"><thead><tr><th>日付</th><th>科目</th><th>金額</th><th>支払先</th><th>メモ</th></tr></thead><tbody>${expDetail}</tbody></table>
+      
+      <div class="rsec">【団員別集金状況】</div>
+      <table class="rtbl"><thead><tr><th>団員名</th><th>団費</th><th>臨時徴収</th><th>合計</th></tr></thead><tbody>${memberRows}</tbody></table>
+      
+      <div style="text-align:center;padding:24px 0;font-size:12px;color:var(--text-sub)">作成日：${fmtFull(todayStr())}</div>
+    </div>
+  `;
+}
+
+window.exportCSV = () => {
+  const inc=yearIncomes(), exp=yearExpenses();
+  let csv = "種別,日付,カテゴリー,金額,メモ,支払先/団員\n";
+  inc.forEach(i=>{const m=D.members.find(x=>x.id===i.memberId);csv+=`収入,${i.date},${i.category},${i.amount},${i.memo||''},${m?m.name:''}\n`;});
+  exp.forEach(e=>{csv+=`支出,${e.date},${e.category},${e.amount},${e.memo||''},${e.payee||''}\n`;});
+  const blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${getYear()?.name||'会計'}_収支データ.csv`;a.click();
+};
+
+// ═══════════════════════════════════
+// MEMBERS TAB
+// ═══════════════════════════════════
+function renderMembers(){
+  const active=D.members.filter(m=>!m.leaveDate);
+  const inactive=D.members.filter(m=>m.leaveDate);
+  
+  const renderMI = (m, dim) => `
+    <div class="mi"${dim?' style="opacity:.6"':''}>
+      <div class="mav"${dim?' style="background:#eee;color:#aaa"':''}>${m.name.charAt(0)}</div>
+      <div class="minfo"><div class="mname">${m.name}</div><div class="msub">${m.leaveDate?'退団日：'+m.leaveDate:'加入日：'+m.joinDate}${m.note?' / '+m.note:''}</div></div>
+      <div class="macts">
+        <button onclick="openMemberForm('${m.id}')">${IC.editS}</button>
+        <button onclick="deleteMember('${m.id}','${m.name}')">${IC.trash}</button>
+      </div>
+    </div>`;
+  
+  return `
+    <div class="hdr"><h1>メンバー管理</h1><div class="hdr-r"><button onclick="openMemberForm()" style="font-size:14px;font-weight:600;font-family:inherit">＋追加</button></div></div>
+    <div class="stit"><span>現役団員（${active.length}名）</span></div>
+    ${active.length===0?'<div class="empty"><p>団員を追加してください</p></div>':''}
+    ${active.map(m=>renderMI(m,false)).join('')}
+    ${inactive.length>0?`<div class="stit"><span>退団者（${inactive.length}名）</span></div>${inactive.map(m=>renderMI(m,true)).join('')}`:''}
+    <button class="fab" onclick="openMemberForm()">${IC.plus}</button>
+  `;
+}
+
+window.openMemberForm = (id) => {
+  const m = id ? D.members.find(x=>x.id===id) : null;
+  const html = `<div class="modal-ov" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-h"><h2>${m?'団員編集':'団員追加'}</h2><button class="modal-c" onclick="closeModal()">${IC.close}</button></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div><label class="fl">氏名 *</label><input class="fi" id="mfName" value="${m?m.name:''}" placeholder="山田 太郎"></div>
+        <div><label class="fl">加入日</label><input class="fi" type="date" id="mfJoin" value="${m?m.joinDate:todayStr()}"></div>
+        <div><label class="fl">退団日（任意）</label><input class="fi" type="date" id="mfLeave" value="${m?.leaveDate||''}"></div>
+        <div><label class="fl">備考</label><input class="fi" id="mfNote" value="${m?.note||''}" placeholder="パート等"></div>
+        <button class="btn btn-o" style="width:100%;padding:14px;font-size:16px;border-radius:25px" onclick="saveMember('${id||''}')">${m?'更新する':'追加する'}</button>
+      </div>
+    </div>
+  </div>`;
+  let existing=document.getElementById('modalLayer');
+  if(!existing){existing=document.createElement('div');existing.id='modalLayer';document.body.appendChild(existing);}
+  existing.innerHTML=html;
+};
+
+window.saveMember = (id) => {
+  const name=$('#mfName').value.trim(), join=$('#mfJoin').value, leave=$('#mfLeave').value, note=$('#mfNote').value;
+  if(!name){showToast('氏名を入力してください');return;}
+  if(id){
+    D.members=D.members.map(m=>m.id===id?{...m,name,joinDate:join,leaveDate:leave||null,note}:m);
+    showToast('更新しました');
+  } else {
+    D.members.push({id:uuid(),name,joinDate:join,leaveDate:leave||null,note});
+    showToast('追加しました');
+  }
+  saveDB(); closeModal(); render();
+};
+
+window.deleteMember = (id, name) => {
+  showConfirm('団員を削除', `${name}を削除しますか？`, ()=>{
+    D.members=D.members.filter(m=>m.id!==id); saveDB(); showToast('削除しました'); render();
+  });
+};
+
+// ═══════════════════════════════════
+// SETTINGS TAB
+// ═══════════════════════════════════
+function renderSettings(){
+  const yrs = D.years.map(y=>
+    `<div class="si" onclick="switchYear('${y.id}')"><span class="lb">${y.name}</span><span class="vl" ${y.id===D.settings.currentYearId?'style="color:var(--orange)"':''}>${y.id===D.settings.currentYearId?'✓ 選択中':y.startDate+'〜'}</span></div>`
+  ).join('');
+  
+  return `
+    <div class="hdr"><h1>設定</h1></div>
+    <div class="stit"><span>年度管理</span></div>
+    <div class="card" style="margin:0 16px">
+      ${yrs}
+      <div class="si" onclick="openYearForm()" style="color:var(--orange);justify-content:center"><span class="lb" style="color:var(--orange)">＋ 年度を追加</span></div>
+    </div>
+    <div class="stit"><span>カテゴリー管理</span></div>
+    <div class="card" style="margin:0 16px">
+      <div class="si" onclick="openCatEditor('income')"><span class="lb">収入カテゴリー</span><span class="vl">${D.incomeCategories.join(', ')}</span></div>
+      <div class="si" onclick="openCatEditor('expense')"><span class="lb">支出カテゴリー</span><span class="vl">${D.expenseCategories.join(', ')}</span></div>
+    </div>
+    <div class="stit"><span>データ管理</span></div>
+    <div class="card" style="margin:0 16px">
+      <div class="si" onclick="exportAll()"><span class="lb">全データエクスポート (JSON)</span>${IC.dl}</div>
+      <label class="si" style="cursor:pointer"><span class="lb">JSONインポート</span>${IC.ul}<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+      <label class="si" style="cursor:pointer"><span class="lb">CSVインポート</span>${IC.ul}<input type="file" accept=".csv,.txt" style="display:none" onchange="importCSV(this)"></label>
+    </div>
+    <div class="stit"><span>その他</span></div>
+    <div class="card" style="margin:0 16px">
+      <div class="si" onclick="clearAllData()"><span class="lb" style="color:var(--red)">全データを削除</span></div>
+    </div>
+    <div style="text-align:center;padding:24px 16px;font-size:11px;color:var(--text-sub)">合唱団会計管理アプリ v1.0<br>データはこのデバイスに保存されます</div>
+  `;
+}
+
+window.switchYear = id => { D.settings.currentYearId=id; saveDB(); showToast('年度を切り替えました'); render(); };
+
+window.openYearForm = () => {
+  const next = Math.max(...D.years.map(y=>Number(y.id)))+1;
+  const html=`<div class="modal-ov" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-h"><h2>年度追加</h2><button class="modal-c" onclick="closeModal()">${IC.close}</button></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div><label class="fl">年度ID</label><input class="fi" id="yfId" value="${next}"></div>
+      <div><label class="fl">開始日</label><input class="fi" type="date" id="yfStart" value="${next}-04-01"></div>
+      <div><label class="fl">終了日</label><input class="fi" type="date" id="yfEnd" value="${next+1}-03-31"></div>
+      <button class="btn btn-o" style="width:100%;padding:14px;font-size:16px;border-radius:25px" onclick="saveYear()">追加する</button>
+    </div>
+  </div></div>`;
+  let el=document.getElementById('modalLayer');if(!el){el=document.createElement('div');el.id='modalLayer';document.body.appendChild(el);}el.innerHTML=html;
+};
+
+window.saveYear = () => {
+  const id=$('#yfId').value, s=$('#yfStart').value, e=$('#yfEnd').value;
+  if(!id||!s||!e){showToast('全項目を入力してください');return;}
+  if(D.years.find(y=>y.id===id)){showToast('既に存在します');return;}
+  D.years.push({id,name:id+'年度',startDate:s,endDate:e}); saveDB(); showToast('追加しました'); closeModal(); render();
+};
+
+window.exportAll = () => {
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`choir_backup_${todayStr()}.json`;a.click();
+};
+
+window.importJSON = el => {
+  const f=el.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.members&&d.incomes&&d.expenses){D={...defaultData(),...d};saveDB();showToast('インポートしました');render();}else showToast('形式が不正です');}catch{showToast('読み込み失敗');}};
+  r.readAsText(f);
+};
+
+window.importCSV = el => {
+  const f=el.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{try{
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    if(lines.length<2){showToast('データが空です');return;}
+    const hdr=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+    for(let i=1;i<lines.length;i++){
+      const c=lines[i].split(',').map(x=>x.trim().replace(/"/g,''));
+      if(c.length<4)continue;
+      const tI=hdr.indexOf('種別'),dI=hdr.indexOf('日付'),cI=hdr.indexOf('カテゴリー'),aI=hdr.indexOf('金額'),mI=hdr.indexOf('メモ');
+      const type=tI>=0?c[tI]:c[0], date=dI>=0?c[dI]:c[1], cat=cI>=0?c[cI]:c[2], amt=Number(aI>=0?c[aI]:c[3]), memo=mI>=0?c[mI]:(c[4]||'');
+      if(type==='収入') D.incomes.push({id:uuid(),date,type:'other',memberId:null,category:cat,amount:amt,memo,yearId:D.settings.currentYearId});
+      else if(type==='支出') D.expenses.push({id:uuid(),date,category:cat,amount:amt,payee:'',memo,yearId:D.settings.currentYearId});
+    }
+    saveDB();showToast('CSVインポートしました');render();
+  }catch{showToast('読み込み失敗');}};
+  r.readAsText(f);
+};
+
+window.clearAllData = () => {
+  showConfirm('全データ削除','すべてのデータを削除してよろしいですか？\nこの操作は元に戻せません。',()=>{
+    D=defaultData();saveDB();showToast('削除しました');render();
+  });
+};
+
+// ═══════════════════════════════════
+// CONFIRM DIALOG
+// ═══════════════════════════════════
+function showConfirm(title, msg, onOk){
+  const html=`<div class="conf-ov" onclick="closeConfirm()"><div class="conf" onclick="event.stopPropagation()">
+    <h3>${title}</h3><p>${msg.replace(/\n/g,'<br>')}</p>
+    <div class="conf-a"><button class="btn btn-out" onclick="closeConfirm()">キャンセル</button><button class="btn btn-d" id="confOk">削除</button></div>
+  </div></div>`;
+  let el=document.getElementById('confLayer');if(!el){el=document.createElement('div');el.id='confLayer';document.body.appendChild(el);}el.innerHTML=html;
+  document.getElementById('confOk').onclick=()=>{onOk();closeConfirm();};
+}
+window.closeConfirm = () => {const l=document.getElementById('confLayer');if(l)l.innerHTML='';};
+
+// ─── Bind events & init ───
+function bindEvents(){}
+
+// Register minimal SW for PWA
+if('serviceWorker' in navigator){
+  const swBlob = new Blob([`
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+  `], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+
+render();
+</script>
+</body>
+</html>
